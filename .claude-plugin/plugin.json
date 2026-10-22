@@ -1,0 +1,7 @@
+{
+  "name": "claude-tidy",
+  "version": "0.1.0",
+  "description": "Each Claude Code session cleans up the scratch copies it created, and keeps what is still needed.",
+  "author": { "name": "Dominik Martin", "email": "hey@dominikmart.in" },
+  "license": "MIT"
+}
