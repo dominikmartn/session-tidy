@@ -1,0 +1,12 @@
+{
+  "name": "session-tidy",
+  "description": "Each Claude Code session cleans up the scratch copies it created.",
+  "owner": { "name": "Dominik Martin", "email": "hey@dominikmart.in" },
+  "plugins": [
+    {
+      "name": "session-tidy",
+      "description": "Each Claude Code session cleans up the scratch copies it created, and keeps what is still needed.",
+      "source": "./"
+    }
+  ]
+}

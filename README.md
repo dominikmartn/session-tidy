@@ -1,4 +1,4 @@
-# claude-tidy
+# session-tidy
 
 A Claude Code plugin that lets each session clean up the scratch copies it created.
 
@@ -8,7 +8,7 @@ When you run many Claude Code sessions, each one clones repos, adds worktrees an
 
 - **Hook (PostToolUse, Bash):** when a command creates something in the scratch folder (`mkdir`, `git clone`, `git worktree add`, `cp -R`, `rsync`, `mv`, `tar -x`, `unzip`), it records the session as the owner. Bookkeeping only, it never blocks.
 - **Hook (SessionEnd):** marks the session's copies as ended. It deletes nothing.
-- **Skill `/claude-tidy:tidy`** (or say "tidy up"): the session removes its own copies, dev servers and jobs, keeps what is still needed (unpushed work, results the user hasn't seen, open PRs, pinned copies) and reports what it kept and why. It runs only when you ask.
+- **Skill `/session-tidy:tidy`** (or say "tidy up"): the session removes its own copies, dev servers and jobs, keeps what is still needed (unpushed work, results the user hasn't seen, open PRs, pinned copies) and reports what it kept and why. It runs only when you ask.
 - **Sweep:** frees untracked `build`, `target`, `node_modules`, `DerivedData`, `.build` and `dist` folders in copies whose owner is gone, that are clean git repos and untouched for a few days. Anything git tracks stays, so every deletion can be rebuilt.
 
 Nothing is deleted automatically.
@@ -17,9 +17,20 @@ Nothing is deleted automatically.
 
 macOS or Linux, `python3` and `git` on the `PATH`. Not tested on Windows.
 
+## Install
+
+In Claude Code:
+
+```
+/plugin marketplace add dominikmartn/session-tidy
+/plugin install session-tidy@session-tidy
+```
+
+Restart Claude Code so the hooks load.
+
 ## Setup
 
-Install the plugin, then create the scratch folder. It must hold only throwaway copies, never your real projects: the sweep frees build folders of every idle, clean repo in it. As a guard against a mistyped path, the sweep refuses to run in a folder that holds no owner entries yet:
+Create the scratch folder. It must hold only throwaway copies, never your real projects: the sweep frees build folders of every idle, clean repo in it. As a guard against a mistyped path, the sweep refuses to run in a folder that holds no owner entries yet:
 
 ```sh
 mkdir -p ~/.claude-scratch
@@ -37,8 +48,8 @@ Set these where the hooks see them: in the `env` block of `~/.claude/settings.js
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `CLAUDE_TIDY_DIR` | `~/.claude-scratch` | scratch folder |
-| `CLAUDE_TIDY_REST_DAYS` | `3` | days a copy must sit untouched before the sweep frees its build folders |
+| `SESSION_TIDY_DIR` | `~/.claude-scratch` | scratch folder |
+| `SESSION_TIDY_REST_DAYS` | `3` | days a copy must sit untouched before the sweep frees its build folders |
 
 ## Helper
 
@@ -56,7 +67,6 @@ A copy containing `.keep-until-YYYY-MM-DD` is also left alone until that date.
 - Ownership comes from reading the command text. A command that names another session's copy as its target makes it yours once that session is no longer running, including a crashed session you later resume.
 - To tell whether a session is still running, the sweep reads `~/.claude/sessions/`, which Claude Code writes but does not document. If that folder is missing or lists no running session, a copy counts as abandoned once its session ended or it has not been touched for the rest period.
 - "In use by a process" means a running command line names the copy's path. A dev server started from inside the copy with a relative command is not seen, which is one reason for the rest period.
-- Bash calls made by subagents may be recorded under the subagent's own session. Not yet checked.
 - Single machine. Copies on remote hosts are not tracked.
 
 ## Test

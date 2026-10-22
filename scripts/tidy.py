@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""claude-tidy: keep track of which Claude Code session created which scratch copy,
+"""session-tidy: keep track of which Claude Code session created which scratch copy,
 so each session can clean up after itself, and free build folders of abandoned copies.
 
   tidy.py hook-register        PostToolUse(Bash) hook, reads the hook JSON on stdin
@@ -11,16 +11,16 @@ so each session can clean up after itself, and free build folders of abandoned c
   tidy.py sweep [--run] [-v]   delete build folders of abandoned copies (dry run by default)
 
 Config (environment):
-  CLAUDE_TIDY_DIR        scratch folder, default ~/.claude-scratch
-  CLAUDE_TIDY_REST_DAYS  days a copy must sit untouched before its build folders go, default 3
+  SESSION_TIDY_DIR        scratch folder, default ~/.claude-scratch
+  SESSION_TIDY_REST_DAYS  days a copy must sit untouched before its build folders go, default 3
 """
 import json, os, re, shutil, subprocess, sys, time
 
 HOME = os.path.expanduser("~")
-TMP = os.path.abspath(os.path.expanduser(os.environ.get("CLAUDE_TIDY_DIR", "~/.claude-scratch")))
+TMP = os.path.abspath(os.path.expanduser(os.environ.get("SESSION_TIDY_DIR", "~/.claude-scratch")))
 REG = os.path.join(TMP, ".owners")
 try:
-    REST_DAYS = max(1, int(os.environ.get("CLAUDE_TIDY_REST_DAYS", "3")))
+    REST_DAYS = max(1, int(os.environ.get("SESSION_TIDY_REST_DAYS", "3")))
 except ValueError:
     REST_DAYS = 3
 BUILD = {"build", "target", "node_modules", "DerivedData", ".build", "dist"}
@@ -31,8 +31,8 @@ NAME_CHARS = r"/([A-Za-z0-9][A-Za-z0-9._-]*)"
 
 def name_pattern():
     """The scratch folder as it may appear in a command: absolute, ~/..., $HOME/...,
-    $CLAUDE_TIDY_DIR/..."""
-    forms = [TMP, "$CLAUDE_TIDY_DIR", "${CLAUDE_TIDY_DIR}"]
+    $SESSION_TIDY_DIR/..."""
+    forms = [TMP, "$SESSION_TIDY_DIR", "${SESSION_TIDY_DIR}"]
     if TMP.startswith(HOME + "/"):
         rel = TMP[len(HOME) + 1:]
         forms += ["~/" + rel, "$HOME/" + rel, "${HOME}/" + rel]
@@ -210,7 +210,7 @@ def sweep(run, verbose):
         print(f"{TMP} does not exist, nothing to do")
         return
     if TMP in ("/", HOME) or not os.path.isdir(REG):
-        # Guard against a mistyped CLAUDE_TIDY_DIR pointing at real projects: only a
+        # Guard against a mistyped SESSION_TIDY_DIR pointing at real projects: only a
         # folder the hook has already written owner entries into counts as scratch.
         sys.exit(f"tidy: {TMP} has no .owners folder, so it is not a scratch folder; refusing to sweep")
     live = live_sessions()

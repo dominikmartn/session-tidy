@@ -4,9 +4,9 @@
 set -u
 TIDY="$(cd "$(dirname "$0")/.." && pwd)/scripts/tidy.py"
 SANDBOX=$(mktemp -d)
-export HOME="$SANDBOX" CLAUDE_TIDY_DIR="$SANDBOX/.claude-scratch"
+export HOME="$SANDBOX" SESSION_TIDY_DIR="$SANDBOX/.claude-scratch"
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
-S="$CLAUDE_TIDY_DIR"; fail=0
+S="$SESSION_TIDY_DIR"; fail=0
 check() { if eval "$2"; then echo "ok   $1"; else echo "FAIL $1"; fail=1; fi; }
 hook() { printf '{"session_id":"%s","tool_input":{"command":%s}}' "$1" "$(python3 -c 'import json,sys;print(json.dumps(sys.argv[1]))' "$2")" | python3 "$TIDY" hook-register; }
 end() { printf '{"session_id":"%s","reason":"other"}' "$1" | python3 "$TIDY" hook-session-end; }
@@ -23,8 +23,8 @@ check "copy target goes to the copying session" '[ "$(owner beta)" = S2 ]'
 check "copy source keeps its owner" '[ "$(owner alpha)" = S1 ]'
 hook S2 "git clone https://example.invalid/r.git $S/gamma"
 check "absolute path registers" '[ "$(owner gamma)" = S2 ]'
-hook S2 'cp -rf src $CLAUDE_TIDY_DIR/delta; gh repo clone o/r ${CLAUDE_TIDY_DIR}/eps; tar xzf a.tgz -C ~/.claude-scratch/zeta'
-check "cp -rf with \$CLAUDE_TIDY_DIR registers" '[ "$(owner delta)" = S2 ]'
+hook S2 'cp -rf src $SESSION_TIDY_DIR/delta; gh repo clone o/r ${SESSION_TIDY_DIR}/eps; tar xzf a.tgz -C ~/.claude-scratch/zeta'
+check "cp -rf with \$SESSION_TIDY_DIR registers" '[ "$(owner delta)" = S2 ]'
 check "gh repo clone registers" '[ "$(owner eps)" = S2 ]'
 check "tar xzf registers" '[ "$(owner zeta)" = S2 ]'
 hook S3 'ls ~/.claude-scratch/alpha'
@@ -44,7 +44,7 @@ check "pin rejects a path outside the scratch folder" '! python3 "$TIDY" pin ../
 
 # Sweep refuses a folder the hook never wrote to
 mkdir -p "$SANDBOX/projects/p/node_modules"
-CLAUDE_TIDY_DIR="$SANDBOX/projects" python3 "$TIDY" sweep --run >/dev/null 2>&1; rc=$?
+SESSION_TIDY_DIR="$SANDBOX/projects" python3 "$TIDY" sweep --run >/dev/null 2>&1; rc=$?
 check "sweep refuses a folder without .owners" '[ $rc != 0 ] && [ -d "$SANDBOX/projects/p/node_modules" ]'
 
 # Sweep rules. A fake ~/.claude/sessions file marks session LIVE as running.

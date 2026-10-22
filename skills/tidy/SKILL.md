@@ -1,13 +1,13 @@
 ---
 name: tidy
-description: The session cleans up after itself. It removes the scratch copies, dev servers and background jobs it created, keeps what is still needed and says why, then frees build folders of abandoned copies. Use only when the user runs /claude-tidy:tidy or says "tidy up", "clean up after yourself" or similar. Never start it on your own, not even when the disk is low.
+description: The session cleans up after itself. It removes the scratch copies, dev servers and background jobs it created, keeps what is still needed and says why, then frees build folders of abandoned copies. Use only when the user runs /session-tidy:tidy or says "tidy up", "clean up after yourself" or similar. Never start it on your own, not even when the disk is low.
 ---
 
 # Tidy
 
 Only the session knows what it still needs. So each session cleans up its own things and nobody else's. A central cleaner that guesses from the outside frees little and risks deleting live work.
 
-The scratch folder is `$CLAUDE_TIDY_DIR` (default `~/.claude-scratch`). The helper is `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/tidy.py"`, called `tidy.py` below.
+The scratch folder is `$SESSION_TIDY_DIR` (default `~/.claude-scratch`). The helper is `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/tidy.py"`, called `tidy.py` below.
 
 ## 1. Collect your own things
 
@@ -37,7 +37,7 @@ Never without the user's go-ahead: anything outside the scratch folder, copies w
 
 ## 3. Build folders of abandoned copies
 
-Run `tidy.py sweep` first, it is a dry run. Then `tidy.py sweep --run`. It deletes only untracked `build`, `target`, `node_modules`, `DerivedData`, `.build` and `dist` folders, and only in copies whose owner session is no longer running, that are clean git repos of their own, untouched for `CLAUDE_TIDY_REST_DAYS` days (default 3), not pinned and not named in any running command line. Anything git tracks stays. It refuses to run in a folder without an `.owners` registry.
+Run `tidy.py sweep` first, it is a dry run. Then `tidy.py sweep --run`. It deletes only untracked `build`, `target`, `node_modules`, `DerivedData`, `.build` and `dist` folders, and only in copies whose owner session is no longer running, that are clean git repos of their own, untouched for `SESSION_TIDY_REST_DAYS` days (default 3), not pinned and not named in any running command line. Anything git tracks stays. It refuses to run in a folder without an `.owners` registry.
 
 ## 4. Report (short)
 
